@@ -70,7 +70,7 @@ makeAccounts.DEFAULT_COUNT = DEFAULT_COUNT; //for testing
 
 class Accounts {
   constructor() {
-    //TODO
+    this.accounts = [];
   }
 
   /** Return ID of a newly created account having holder ID set to
@@ -81,8 +81,15 @@ class Accounts {
    *    BAD_REQ:     holderId not specified.
    */
   newAccount(params={}) {
-    //TODO
-    return '';
+    if(!params.holderId){
+    	let err = new AppErrors();
+    	err.add('account holderId must be provided', {code: 'BAD_REQ'});
+    	return err;
+    } else{
+    	let acc = new Account(params.holderId);
+    	this.accounts.push(acc);
+    	return acc.id;
+    }
   }
 
   /** Return account for params.id.
@@ -91,8 +98,18 @@ class Accounts {
    *    NOT_FOUND:   no account having ID id.
    */
   account(params) {
-    //TODO
-    return {};
+    if(!params.id){
+    	let err = new AppErrors();
+    	err.add('account id must be provided', {code: 'BAD_REQ'});
+    	return err;
+    } else{
+    	for(const a of this.accounts){
+    		if(a.id === params.id) return a;
+    	}
+    	let err = new AppErrors();
+    	err.add('cannot find account', {code: 'NOT_FOUND'});
+    	return err;
+    }
   }
 
   
@@ -100,7 +117,9 @@ class Accounts {
 
 class Account {
   constructor(holderId) {
-    TODO
+    this.holderId = holderId;
+    this.id = genId();
+    this.transactions = [];
   }
 
   /** Return object { id, holderId, balance } where id is account ID,
@@ -111,8 +130,7 @@ class Account {
    *  Error Codes: None.
    */
   info(params={}) {
-    //TODO
-    return {};
+  	return {id: this.id, holderId: this.holderId, balance: 0};
   }
 
   /** Return ID of a newly created transaction.  When called, params must be 
