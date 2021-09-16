@@ -115,11 +115,31 @@ class Accounts {
   
 }
 
+class Transaction{
+	constructor(amount, date, memo){
+		this.id = genId();
+		this.amount = amount;
+		this.date = date;
+		this.memo = memo;
+	}
+	
+	//compare two Transactions by date
+	//returns 0 if equal, negative if t2 later than this and positive if this later than t2
+	compare(t2){
+		const yearDif = Number(this.date.substring(0,4))-Number(t2.date.substring(0,4));
+		if(yearDif != 0) return yearDif;
+		const monthDif = Number(this.date.substring(5,7))-Number(t2.date.substring(5,7));
+		if(monthDif !=0) return monthDif;
+		return Number(this.date.substring(8))-Number(t2.date.substring(8));
+	}
+}
+
 class Account {
   constructor(holderId) {
     this.holderId = holderId;
     this.id = genId();
     this.transactions = [];
+    this.balance = Number(0);
   }
 
   /** Return object { id, holderId, balance } where id is account ID,
@@ -130,7 +150,7 @@ class Account {
    *  Error Codes: None.
    */
   info(params={}) {
-  	return {id: this.id, holderId: this.holderId, balance: 0};
+  	return {id: this.id, holderId: this.holderId, balance: this.balance};
   }
 
   /** Return ID of a newly created transaction.  When called, params must be 
@@ -148,8 +168,27 @@ class Account {
    *                 restrictions on format.
    */
   newAct(params={}) {
-    //TODO
-    return '';
+  //use utils functions that get date and cents
+  	let err = new AppErrors();
+  	if(!params.amount){
+    		err.add('amount must be provided', {code: 'BAD_REQ'});
+    		return err;
+  	} else if(!params.date){
+    		err.add('date must be provided', {code: 'BAD_REQ'});
+    		return err;
+  	} else if(!params.memo){
+    		err.add('memo must be provided', {code: 'BAD_REQ'});
+    		return err;
+  	}
+  	const cents = getCents(params.amount, err);
+  	//if (cents.errors !== undefined) return cents;
+  	const date = getDate(params.date, err);
+  	if(err.isError()) return err;
+  	//if date.hasOwnProperty('errors') return date;
+  	let trans = new Transaction(cents, date, params.memo);
+  	this.transactions.push(trans);
+  	this.balance = Number(cents/100)+this.balance;
+    	return trans.id;
   }
 
   /** Return list of transactions satisfying params for an account.
@@ -225,9 +264,4 @@ class Account {
   }
 
 }
-
-class Transaction {
-  //TODO
-}
-
 

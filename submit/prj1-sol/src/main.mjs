@@ -57,8 +57,9 @@ async function doLine(accounts, line, rl) {
 	const account = accounts.account(args);
 	if (account.errors) {
 	  results = account;
-	}
-	else {
+	} else if(cmd == 'account'){
+	  results = account.info();	
+	}else {
 	  results =  account[fn].call(account, args);
 	}
       }
