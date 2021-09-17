@@ -125,13 +125,21 @@ class Transaction{
 	
 	//compare two Transactions by date
 	//returns 0 if equal, negative if t2 later than this and positive if this later than t2
-	compare(t2){
+	/*compare(t2){
 		const yearDif = Number(this.date.substring(0,4))-Number(t2.date.substring(0,4));
 		if(yearDif != 0) return yearDif;
 		const monthDif = Number(this.date.substring(5,7))-Number(t2.date.substring(5,7));
 		if(monthDif !=0) return monthDif;
 		return Number(this.date.substring(8))-Number(t2.date.substring(8));
-	}
+	}*/
+}
+
+function compareDates(trans1, trans2){
+	const yearDif = Number(trans1.date.substring(0,4))-Number(trans2.date.substring(0,4));
+	if(yearDif !=0) return yearDif;
+	const monthDif = Number(trans1.date.substring(5,7))-Number(trans2.date.substring(5,7));
+	if(monthDif !=0) return monthDif;
+	return Number(trans1.date.substring(8))-Number(trans2.date.substring(8));
 }
 
 class Account {
@@ -230,8 +238,65 @@ class Account {
    *                 not meet their requirements.
    */
   query(params={}) {
-    //TODO
-    return [];
+    //use the sort() function with a custom compare() function to sort transactions
+    let err = new AppErrors();
+    let date = '';
+    let index = 0;
+    let count = DEFAULT_COUNT;
+    if(params.date){
+    	date = getDate(params.date, err);
+    } if(params.count){
+    	count = getPositiveInt(params.count, err);
+    } if(params.index){
+    	index = getPositiveInt(params.index, err);
+    }
+    if(err.isError()) return err;
+    let retList = [];
+    this.transactions.sort(compareDates);
+    for(let i=index; i<this.transactions.length;i++){
+    	const trans = this.transactions[i];
+    	if(params.actId && params.date && params.memoText){ 
+    		if(trans.id === params.actId && trans.date === params.date && trans.memo.toLowerCase().includes(params.memoText.toLowerCase())){
+    			retList.push(trans);
+    			count--;
+    		}
+    	} else if(params.actId && params.date){
+    		if(trans.id === params.actId && trans.date === params.date){
+    			retList.push(trans);
+    			count--;
+    		}
+    	} else if(params.actId && params.memoText){
+    		if(trans.id === params.actId && trans.memo.toLowerCase().includes(params.memoText.toLowerCase())){
+    			retList.push(trans);
+    			count--;
+    		}
+    	}else if(params.date && params.memoText){
+    		if(trans.date === params.date && trans.memo.toLowerCase().includes(params.memoText.toLowerCase())){
+    			retList.push(trans);
+    			count--;
+    		}
+    	}else if(params.actId){
+    		if(trans.id === params.actId){
+    			retList.push(trans);
+    			count--;
+    		}
+    	}else if(params.date){
+    		if(trans.date === params.date){
+    			retList.push(trans);
+    			count--;
+    		}
+    	} else if(params.memoText){
+    		if(trans.memo.toLowerCase().includes(params.memoText.toLowerCase())){
+    			retList.push(trans);
+    			count--;
+    		}
+    	} else{
+    		retList.push(trans);
+    		count--;
+    	}
+    	if(count ===0) break;
+    }
+    return retList;
   }
 
   /**
