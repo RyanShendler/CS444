@@ -122,16 +122,6 @@ class Transaction{
 		this.date = date;
 		this.memo = memo;
 	}
-	
-	//compare two Transactions by date
-	//returns 0 if equal, negative if t2 later than this and positive if this later than t2
-	/*compare(t2){
-		const yearDif = Number(this.date.substring(0,4))-Number(t2.date.substring(0,4));
-		if(yearDif != 0) return yearDif;
-		const monthDif = Number(this.date.substring(5,7))-Number(t2.date.substring(5,7));
-		if(monthDif !=0) return monthDif;
-		return Number(this.date.substring(8))-Number(t2.date.substring(8));
-	}*/
 }
 
 function compareDates(trans1, trans2){
@@ -140,6 +130,15 @@ function compareDates(trans1, trans2){
 	const monthDif = Number(trans1.date.substring(5,7))-Number(trans2.date.substring(5,7));
 	if(monthDif !=0) return monthDif;
 	return Number(trans1.date.substring(8))-Number(trans2.date.substring(8));
+}
+
+//return 0 if dates are equal, return positive if date1 later than date2, return negative if date2 later than date1
+function compareDate2(date1, date2){
+	const yearDif = Number(date1.substring(0,4))-Number(date2.substring(0,4));
+	if(yearDif !=0) return yearDif;
+	const monthDif = Number(date1.substring(5,7))-Number(date2.substring(5,7));
+	if(monthDif !=0) return monthDif;
+	return Number(date1.substring(8))-Number(date2.substring(8));
 }
 
 class Account {
@@ -158,7 +157,7 @@ class Account {
    *  Error Codes: None.
    */
   info(params={}) {
-  	return {id: this.id, holderId: this.holderId, balance: this.balance};
+  	return {id: this.id, holderId: this.holderId, balance: Number(this.balance.toFixed(2))};
   }
 
   /** Return ID of a newly created transaction.  When called, params must be 
@@ -324,8 +323,43 @@ class Account {
    *    BAD_REQ:     fromDate or toDate are not valid dates.
    */
   statement(params={}) {
-    //TODO
-    return [];
+    let err = new AppErrors();
+    let from = '';
+    let to = '';
+    let bal = Number(0);
+    if(params.fromDate){
+    	from = getDate(params.fromDate, err);
+    } 
+    if(params.toDate){
+    	to = getDate(params.toDate, err);
+    }
+    if(err.isError()) return err;
+    let retList = [];
+    this.transactions.sort(compareDates);
+    for(const trans of this.transactions){
+    	let t = {};
+    	bal = Number(((trans.amount/100)+bal).toFixed(2));
+    	if(params.fromDate && params.toDate){
+    		if((compareDate2(trans.date, params.fromDate)>=0) && (compareDate2(trans.date, params.toDate)<=0)){
+    			t = {id: trans.id, amount: trans.amount, date: trans.date, memo: trans.memo, balance: Number(bal.toFixed(2))};
+    			retList.push(t);
+    		}
+    	} else if(params.fromDate){
+    		if(compareDate2(trans.date, params.fromDate)>=0){
+    			t = {id: trans.id, amount: trans.amount, date: trans.date, memo: trans.memo, balance: Number(bal.toFixed(2))};
+    			retList.push(t);
+    		}
+    	} else if(params.toDate){
+    		if(compareDate2(trans.date, params.toDate)<=0){
+    			t = {id: trans.id, amount: trans.amount, date: trans.date, memo: trans.memo, balance: Number(bal.toFixed(2))};
+    			retList.push(t);
+    		}
+    	} else{
+    		t = {id: trans.id, amount: trans.amount, date: trans.date, memo: trans.memo, balance: Number(bal.toFixed(2))};
+    		retList.push(t);
+    	}
+    }
+    return retList;
   }
 
 }
