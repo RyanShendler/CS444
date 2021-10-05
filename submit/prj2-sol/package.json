@@ -13,5 +13,15 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cs544-js-utils": "file:../../../cs544/lib/cs544-js-utils",
+    "cs544-node-utils": "file:../../../cs544/lib/cs544-node-utils",
+    "mongodb": "^3.6.3"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^9.1.2",
+    "mongodb-memory-server": "^7.4.2"
+  }
 }
