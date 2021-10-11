@@ -131,6 +131,31 @@ class AccountsDao{
 			return errors('DB', err.toString());
 		}
 	}
+	async statement(params={}){
+		try{
+			const val = await this.findId(params.id);
+			if(!val) return errors('NOT_FOUND', 'account not found');
+			const cursor = await this.transactions.find({accId: params.id});
+			let arr = await cursor.toArray();
+			arr.sort(compareDates);
+			let ret=[];
+			let bal = 0;
+			let from = '0000-00-00';
+			let to = '9999-99-99';
+			if(params.fromDate) from = params.fromDate;
+			if(params.toDate) to = params.toDate;
+			for(const t of arr){
+				bal += t.amount;
+				if((compareDate2(t.date, from)>=0) && (compareDate2(t.date, to)<=0)){
+					const x = {actId: t._id, amount: t.amount, date: t.date, memo: t.memo, balance: Number(bal/100)};
+					ret.push(x);
+				}
+			}
+			return ret;
+		}catch(err){
+			return errors('DB', err.toString());
+		}
+	}
 	//returns true if account with id exists, returns false otherwise
 	//maybe add try catch here
 	async findId(id){
@@ -158,6 +183,14 @@ function compareDates(trans1, trans2){
 	const monthDif = Number(trans1.date.substring(5,7))-Number(trans2.date.substring(5,7));
 	if(monthDif !=0) return monthDif;
 	return Number(trans1.date.substring(8))-Number(trans2.date.substring(8));
+}
+
+function compareDate2(date1, date2){
+	const yearDif = Number(date1.substring(0,4))-Number(date2.substring(0,4));
+	if(yearDif !=0) return yearDif;
+	const monthDif = Number(date1.substring(5,7))-Number(date2.substring(5,7));
+	if(monthDif !=0) return monthDif;
+	return Number(date1.substring(8))-Number(date2.substring(8));
 }
 
 function genId(){
