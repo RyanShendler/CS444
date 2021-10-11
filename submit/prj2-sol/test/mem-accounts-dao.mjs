@@ -11,11 +11,13 @@ export default class {
     const uri = mongod.getUri();
     assert(mongod.instanceInfo, `mongo memory server startup failed`);
     const dao = await makeAccountsDao(uri);
+    //console.log(dao);
     dao._mongod = mongod;
     return dao;
   }
 
   static async tearDown(dao) {
+    //console.log(dao);
     await dao.close();
     await dao._mongod.stop();
     assert.equal(dao._mongod.instanceInfo, undefined,
