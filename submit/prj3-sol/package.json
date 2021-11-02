@@ -7,9 +7,25 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/",
+    "debug-test": "mocha --inspect-brk test/",
+    "syntax-check": "shopt -s globstar; for f in **/*.mjs; do node -c $f; done;"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "cs544-js-utils": "file:../../../cs544/lib/cs544-js-utils",
+    "cs544-node-utils": "file:../../../cs544/lib/cs544-node-utils",
+    "express": "^4.17.1",
+    "http-status": "^1.5.0",
+    "mongodb": "3.6"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3",
+    "mongodb-memory-server": "^8.0.0",
+    "supertest": "^6.1.6"
+  }
 }
