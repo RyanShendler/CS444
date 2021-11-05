@@ -9,7 +9,7 @@ import STATUS from 'http-status';
 import assert from 'assert';
 import bodyParser from 'body-parser';
 
-export default function serve(model, base='') {
+export default function serve(model, base='') { //this is makeWs
   const app = express();
   cdThisDir();
   app.locals.model = model;
@@ -22,11 +22,18 @@ export default function serve(model, base='') {
 
 /** set up mapping between URL routes and handlers */
 function setupRoutes(app) {
-  const base = app.locals.base;
+  const base = app.locals.base; //base is '/accounts'
   app.use(cors());
   app.use(bodyParser.json());
 
   //TODO: add routes as necessary
+  app.get(`${base}/:id`, doGetAccount(app)); //find account (the : adds holderId to req.params)
+  app.get(`${base}/:id/transactions/:actId`, doGetAct(app)); //find transaction
+  app.get(base, doSearch(app)); //search for accounts
+  app.get(`${base}/:id/transactions`, doQuery(app)); //query transactions
+  app.get(`${base}/:id/statements/:fromDate/:toDate`, doStatement(app)); //get statement
+  app.post(base, doCreateAccount(app)); //create new account
+  app.post(`${base}/:id/transactions`, doCreateAct(app)); //create new transaction
   
   //must be last
   app.use(do404(app));
@@ -52,9 +59,121 @@ function SOME_NAME(app) {
 }
 
 */
+function doCreateAccount(app){
+  return (async function(req, res) {
+    try{
+      const obj = req.body; //body is just {holderId}
+      const result = await app.locals.model.newAccount(obj); //calls newAccount() function found in accounts-dao.mjs
+      if(result.errors) throw result;
+      const location = requestUrl(req) + '/' + result;
+      res.append('Location', location); //Location header will include URL of new account
+      res.sendStatus(STATUS.CREATED); //return status code 201
+    }catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
 
+function doGetAccount(app){
+  return (async function(req, res) {
+    try{
+      const id = req.params.id;
+      const result = await app.locals.model.info({id});
+      if(result.errors) throw result;
+      res.json(addSelfLinks(req, result));
+    }catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped); //this should return a 404 error
+    }
+  });
+}
 
+function doCreateAct(app){
+  return (async function(req, res){
+    try{
+      let obj = req.body; //body is {amount, date, memo}
+      obj.id = req.params.id; //add account id to obj
+      const result = await app.locals.model.newAct(obj); //make new transaction
+      if(result.errors) throw result;
+      const location = requestUrl(req) + '/' + result;
+      res.append('Location', location);
+      res.sendStatus(STATUS.CREATED);
+    }catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
 
+function doGetAct(app){
+   return (async function(req, res){
+     try{
+       const obj = {id: req.params.id, actId: req.params.actId};
+       const result = await app.locals.model.query(obj);
+       if(result.length === 0){ //result is empty if actId not found
+         const message = `no transaction for actId ${req.params.actId}`;
+         throw { errors: [ { message, options: { code: 'NOT_FOUND' } } ], };
+       }
+       if(result.errors) throw result;
+       res.json(addSelfLinks(req, result[0]));
+     }catch(err){
+       const mapped = mapResultErrors(err);
+       res.status(mapped.status).json(mapped);
+     }
+   });
+}
+
+function doStatement(app){
+  return (async function(req, res){
+    try{
+      const obj = {id: req.params.id, fromDate: req.params.fromDate, toDate: req.params.toDate};
+      const result = await app.locals.model.statement(obj);
+      if(result.errors) throw result;
+      res.json(addSelfLinks(req, result));
+    } catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doSearch(app){
+  return (async function(req, res){
+    try{
+      let obj = Object.assign({}, req.query); //obj is object with possible properties index, count and holderId
+      if(obj.count){
+        const c = Number(obj.count)+1;
+        obj.count = String(c);
+      }
+      const result = await app.locals.model.searchAccounts(obj);
+      if(result.errors) throw result;
+      res.json(addPagingLinks(req, result, true));
+    }catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
+
+function doQuery(app){
+  return (async function(req, res){
+    try{
+      let obj = Object.assign({}, req.query);
+      obj.id = req.params.id;
+      if(obj.count){
+        const c=Number(obj.count)+1;
+        obj.count = String(c);
+      }
+      const result = await app.locals.model.query(obj);
+      if(result.errors) throw result;
+      res.json(addPagingLinks(req, result, true));
+    }catch(err){
+      const mapped = mapResultErrors(err);
+      res.status(mapped.status).json(mapped);
+    }
+  });
+}
 
 /** Default handler for when there is no route for a particular method
  *  and path.
@@ -106,7 +225,11 @@ function queryUrl(req, query={}) {
  */
 function addSelfLinks(req, obj, id=undefined) {
   const baseUrl = requestUrl(req);
-  const href = (id) ? `${baseUrl}/${obj[id]}` : baseUrl;
+  //console.log(obj);
+  //const href = (id) ? `${baseUrl}/${obj['id']}` : baseUrl;
+  let href = baseUrl;
+  if(id && obj.id) href = `${baseUrl}/${obj.id}`;
+  else if(id && obj.actId) href = `${baseUrl}/${obj.actId}`;
   const links = [ { rel: 'self', name: 'self', href } ];
   return {result: obj,  links: links };
 }
@@ -123,6 +246,7 @@ function addPagingLinks(req, results, selfId=undefined) {
     { rel: 'self', name: 'self', href: queryUrl(req, req.query) }
   ];
   const count = Number(req.query?.count ?? DEFAULT_COUNT);
+  //console.log(count);
   const nResults = results.length;  //may be 1 more than count
   const next = pagingUrl(req, nResults, +1);
   if (next) links.push({ rel: 'next', name: 'next', href: next });

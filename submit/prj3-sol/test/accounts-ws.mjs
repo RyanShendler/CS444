@@ -133,7 +133,7 @@ describe('web services', () => {
 
   });
 
-  describe ('single transaction', () => {
+  describe('single transaction', () => {
 
     it('must create transaction', async () => {
       const res1 = await createAccount(TEST_HOLDER);
@@ -174,6 +174,7 @@ describe('web services', () => {
       const [ id, actId ] = await createAccountAndAct(actParams);
       const url = actUrl(id, actId);
       const res = await ws.get(url);
+      //console.log(res.body);
       expect(res.status).to.equal(STATUS.OK);
       const amount = Number(actParams.amount);
       expect(res.body.result).to.deep.equal({actId, ...actParams, amount});
@@ -204,6 +205,7 @@ describe('web services', () => {
       const [ id, actId ] = await createAccountAndAct(actParams);
       const url = actUrl(id, actId + 'x');
       const res = await ws.get(url);
+      //console.log(res.body.result);
       expect(res.status).to.equal(STATUS.NOT_FOUND);
     });
 
@@ -234,6 +236,7 @@ describe('web services', () => {
     async function doSearch(params={}) {
       const q = new URLSearchParams(params).toString();
       const suffix = (q.length > 0) ? `?${q}` : '';
+      //console.log(suffix);
       const url = BASE + suffix;
       return await ws.get(url);
     }
@@ -283,7 +286,9 @@ describe('web services', () => {
       const [ index, count ] = [0, ids.length];
       const infos = await doSearch({index, count});
       expect(infos.status).to.equal(STATUS.OK);
+      //console.log(infos.body.result);
       const allLinks = infos.body.result.map(r => r.links);
+      //console.log(allLinks);
       expect(allLinks.every(links => links.length === 1)).to.equal(true);
       expect(allLinks.every(links => links[0].rel === 'self')).to.equal(true);
       const actualIds = allLinks.map(links => links[0].href.match(/\w+$/)[0]);
@@ -301,9 +306,12 @@ describe('web services', () => {
 
     it ('must have next and prev links for intermediate results', async () => {
       const [index, count] = [2, ids.length-3];
+      //console.log(ids.length-3);
       const res = await doSearch({index, count});
       expect(res.status).to.equal(STATUS.OK);
       const links = res.body.links;
+      //console.log(res.body.result);
+      //console.log(res.body.links);
       expect(links).to.have.length(3);
       const next = links.find(link => link.rel === 'next');
       expect(next).to.not.be.undefined;
@@ -455,6 +463,8 @@ describe('web services', () => {
       const res = await doQuery(id, {index, count});
       expect(res.status).to.equal(STATUS.OK);
       const linksAll = res.body.result.map(r => r.links);
+      //console.log(res.body.result);
+      //console.log(linksAll);
       expect(linksAll).to.have.length(count);
       expect(linksAll.every(links => links.length === 1)).to.equal(true);
       const getActId = href => href.match(/\w+$/)[0];
