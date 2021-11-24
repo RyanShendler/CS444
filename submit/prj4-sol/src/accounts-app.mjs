@@ -59,13 +59,23 @@ function makeAccountsClass(services, ws, extendFn) {
       }
     }
 
-
     /** Set up click handlers for the create and search navigation links
      *  at the start of each app section which select()'s the clicked
      *  on section.
      */
     setNavHandlers() {
-      //TODO
+      const create_links = this.shadowRoot.querySelectorAll('.nav-create > a');
+      const search_links = this.shadowRoot.querySelectorAll('.nav-search > a');
+      create_links.forEach(link => {
+      	link.addEventListener("click", (ev) =>{
+      		this.select('create'); //using fat arrow functions makes this refer to our returned class
+      	});
+      });
+      search_links.forEach(link => {
+      	link.addEventListener("click", (ev) =>{
+      		this.select('search');
+      	});
+      });
     }
 
     /** Set up a handler for submission of the create-form.  Ensure
@@ -75,13 +85,31 @@ function makeAccountsClass(services, ws, extendFn) {
      *  newly created account.
      */
     setCreateHandler() {
-      //TODO
+      const create_form = this.shadowRoot.querySelector('#create-form');
+      create_form.addEventListener("submit", async (ev)=>{
+      	//console.log('submitted');
+      	const form_data = new FormData(ev.currentTarget);
+      	const params = Object.fromEntries(form_data.entries());
+      	const response = await services.newAccount(params);
+      	const sectionElement = this.shadowRoot.querySelector('#create-section');
+      	//console.log(response);
+      	if(!reportErrors(response, sectionElement)){
+      		this.display(response);
+      	}
+      	this.select('detail');
+      	ev.preventDefault(); //prevent event from being sent to server
+      });
     }
 
     /** Create handler for blur event on search-form input widgets.
      */
     setSearchHandler() {
-      //TODO
+      const search_inputs = this.querySelectorAll('#search-form input');
+      for(const input of search_inputs){
+      	input.addEventListener("blur", (ev)=>{
+      		console.log(`${ev.currentTarget} blurred`);
+      	});
+      }
     }
 
     /** Perform an accounts search.  If url is defined (it would be
@@ -97,7 +125,26 @@ function makeAccountsClass(services, ws, extendFn) {
       //TODO
     }
 
-    //TODO: add auxiliary methods as necessary
+    async display(url){
+    	const response = await ws.get(url);
+    	//const sectionElement = this.shadowRoot.querySelector('#create-section');
+    	//console.log(response);
+    	if(!response.errors){ //may need reportErrors
+    		const id = response.result.id;
+    		const holderId = response.result.holderId;
+    		const balance = response.result.balance;
+    		const el = makeAccountDetail(id, holderId, balance); //make detail
+    		//need detail click handler
+    		const details = this.shadowRoot.querySelector('#detail-section'); //may need to change this
+    		details.append(el);
+    		const extend = this.shadowRoot.querySelector(`#extend-${id}`);
+    		extend.addEventListener('click', (ev) =>{
+    			const acc_id = ev.currentTarget.getAttribute('data-id');
+    			const dom_id = ev.currentTarget.getAttribute('id');
+    			extendFn(acc_id, dom_id);
+    		});
+    	}
+    }
 
   };  //end of class expression for web component
   
