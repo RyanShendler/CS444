@@ -104,10 +104,10 @@ function makeAccountsClass(services, ws, extendFn) {
     /** Create handler for blur event on search-form input widgets.
      */
     setSearchHandler() {
-      const search_inputs = this.querySelectorAll('#search-form input');
+      const search_inputs = this.shadowRoot.querySelectorAll('#search-form input');
       for(const input of search_inputs){
-      	input.addEventListener("blur", (ev)=>{
-      		console.log(`${ev.currentTarget} blurred`);
+      	input.addEventListener("blur", async (ev)=>{
+      		await this.search();
       	});
       }
     }
@@ -121,21 +121,84 @@ function makeAccountsClass(services, ws, extendFn) {
      *  the just added scroll controls and the details link within
      *  each account result in the results.
      */
-    async search(url=undefined) {
-      //TODO
+    async search(url=undefined) { //needs testing
+      let response = {};
+      if(url) response = await ws.get(url);
+      else{
+      	const search_form = this.shadowRoot.querySelector('#search-form');
+      	const form_data = new FormData(search_form);
+      	const params = Object.fromEntries(form_data.entries());
+      	response = await services.searchAccounts(params);
+      }
+      this.result(response);
     }
-
-    async display(url){
+    
+    //displays search results
+    async result(response){ 
+    	//need to remove old search results
+    	const old_results = this.shadowRoot.querySelectorAll('.account-result');
+    	const old_scroll = this.shadowRoot.querySelectorAll('.scroll');
+    	for(const r of old_results){
+    		r?.remove();
+    	}
+    	for(const s of old_scroll){
+    		s?.remove();
+    	}
+    	
+    	const no_result = this.shadowRoot.querySelector('#no-results');
+    	if(response.result.length == 0){ //if no results
+    		no_result.classList.remove('invisible'); //make no result message visible
+    	}else{
+    		no_result.classList.add('invisible'); //make message invisible
+    		const search_results = this.shadowRoot.querySelector('#search-results');
+    		for(const res of response.result){
+    			const id = res.result.id;
+    			const holderId = res.result.holderId;
+    			const href = res.links[0].href;
+    			const el = makeSearchResult(id, holderId, href);
+    			search_results.append(el);
+    		}
+    		//add click handlers to each search result
+    		const details = this.shadowRoot.querySelectorAll('.details');
+    		for(const det of details){
+    			det.addEventListener('click', (ev)=>{
+    				const url = ev.currentTarget.getAttribute('data-ws-href');
+    				this.display(url);
+    				this.select('detail');
+    			});
+    		}
+    		//add scroll elements
+    		const scroll1 = makeScrollElement(response.links);
+    		const scroll2 = makeScrollElement(response.links);
+    		search_results.parentNode.insertBefore(scroll1, search_results);
+    		search_results.insertAdjacentElement('afterend', scroll2);
+    		//add scroll click handlers
+    		const scrolls = this.shadowRoot.querySelectorAll('.scroll');
+    		for(const scroll of scrolls){
+    			scroll.addEventListener('click', (ev) =>{
+    				const url = ev.target.getAttribute('data-ws-href');
+    				//console.log(url);
+    				this.search(url);
+    			});
+    		}
+    	}
+    }
+	
+	//displays details of created accounts
+    async display(url){ 
+    	//need to remove old details
+    	const old_details = this.shadowRoot.querySelectorAll('.account-detail');
+    	for(const d of old_details){
+    		d?.remove();
+    	}
+    	
     	const response = await ws.get(url);
-    	//const sectionElement = this.shadowRoot.querySelector('#create-section');
-    	//console.log(response);
     	if(!response.errors){ //may need reportErrors
     		const id = response.result.id;
     		const holderId = response.result.holderId;
     		const balance = response.result.balance;
     		const el = makeAccountDetail(id, holderId, balance); //make detail
-    		//need detail click handler
-    		const details = this.shadowRoot.querySelector('#detail-section'); //may need to change this
+    		const details = this.shadowRoot.querySelector('#account-detail');
     		details.append(el);
     		const extend = this.shadowRoot.querySelector(`#extend-${id}`);
     		extend.addEventListener('click', (ev) =>{

@@ -46,7 +46,7 @@ class Ws {
    * If there are no results, then the returned object should have its
    * result property set to the empty list [].
    */
-  async searchAccounts(params={}) { //needs testing
+  async searchAccounts(params={}) { //seems good
     return await this.get(BASE, params);
   }
 

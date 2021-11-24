@@ -202,6 +202,7 @@ export const HTML = `
       </span>
     </form>
     <p id="search-results"></p>
+    <p id="no-results" class="invisible">No results</p>
   </section>
 
   <section id=${IDS.detail}>
