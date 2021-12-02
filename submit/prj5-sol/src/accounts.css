@@ -1,0 +1,28 @@
+:root {
+  --lightest: #f2f4f1; /* #bfd7ed */
+  --light: #c0c0ff;
+  --dark: #0074b7;
+  --darkest: #003b73;
+  --max-width: 600px;
+}
+
+body {
+  color: var(--darkest);
+  background-color: var(--lightest);
+  max-width: var(--max-width);
+  margin-left: 20px;
+}
+
+
+input, textarea, select {
+  width: 30%;
+}
+
+label {
+  font-weight: bold;
+  text-align: right;
+}
+
+
+
+
