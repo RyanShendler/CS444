@@ -37,7 +37,6 @@ export default function(props) {
 			{formErrors.map((msg, i) => <li className="error">{msg}</li>)}
 		</ul>
 	);
-	//need submit button
 	const form = (
 		<form key="form" className="form-grid2" onSubmit={submit}>
 			<label htmlFor="fromDate">From Date</label>
