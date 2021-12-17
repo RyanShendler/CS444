@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+  <head>
+    <link href="../style.css" rel="stylesheet"/>
+    <title>CS 444/544 Final: DOM Random Dice</title>
+  </head>
+  <body>
+    <h1>DOM Random Dice</h1>
+    <p> Animate the two dice shown below:</p>
+   
+    <ul>
+      <li>Roll the two dice every second so that the value
+	of each dice changes randomly between 1 through 6.</li>
+      <li> Increment the <code># of rolls</code> counter on
+	each roll.
+      </li>
+    </ul>
+
+    <p>The source code for this page is available in
+    <code>src/statics/random-dice/dom-random-dice.html</code>.</p>
+
+    <div id="app">
+      <form>
+        <label for="die1" >Die 1</label>
+        <button type="button" id="die1" class="die">1</button>
+
+        <label for="die2" >Die 2</label>
+        <button type="button" id="die2" class="die">1</button>
+      </form>
+
+      <p>
+        <strong># of rolls</strong>:
+        <span id="nRolls">0</span>
+      </p>
+    </div>
+    
+    <script>
+      (function IIFE() {
+	const PERIOD_MILLIS = 1000;
+	
+	//TODO
+	
+      })();
+    </script>
+
+    <h2>Hints</h2>
+    <ul>
+      <li> Your code should maintain the values of the two dice
+	and # of rolls in state variables.</li>
+      <li>Start an interval timer.</li>
+      <li>For every tick of the timer, roll the dice to update the
+	dice state variables, increment the # of rolls and reflect the
+	value of the state variables into the HTML.</li>
+      <li>
+	  For rolling a die,
+	  use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random">
+	  Math.random()</a>
+	  and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc">
+	  Math.trunc()</a>.  Note that <code>Math.random()</code>
+	  returns a random number <code>x</code> such that <code>0
+	  <= x < 1</code>.  This will need to be transformed to an
+	  integer between 1 through 6.
+      </li>
+    </ul>
+    
+  </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+  <head>
+    <link href="../style.css" rel="stylesheet"/>
+    <title>CS 444/544 Final: DOM Rotating Digits</title>
+  </head>
+  <body>
+    <h1>DOM Rotating Digits</h1>
+
+    <p>Animate the digits in the square below so as to rotate
+      them clockwise by one position every 3 seconds.</p>
+
+    <p>The source code for this page is available in
+    <code>src/statics/rotate-digits/dom-rotate-digits.html</code>.</p>
+
+    
+    <div id="app">
+      <table id="rotate-digits">
+	<tbody>
+	  <tr>
+	    <td data-index="0">1</td>
+	    <td data-index="1">2</td>
+	    <td data-index="2">3</td>
+	  </tr>
+	  <tr>
+	    <td data-index="7">8</td>
+	    <td class="empty">&nbsp;</td>
+	    <td data-index="3">4</td>
+	  </tr>
+	  <tr>
+	    <td data-index="6">7</td>
+	    <td data-index="5">6</td>
+	    <td data-index="4">5</td>
+	  </tr>
+	</tbody>
+      </table>
+    </div>
+    
+    <script>
+      (function IIFE() {
+	const PERIOD_MILLIS = 3000;
+
+	//TODO
+	
+      })();
+    </script>
+
+    <h2>Hints</h2>
+    <ul>
+      <li> Note that each <code>&lt;td&gt;</code> element has
+	a <code>data-index</code> attribute which gives the index of
+	each cell in the sequence of the rotation.  Hence your code
+	needs to simply paint each character of a rotation of the
+	digits string <code>&quot;12345678&quot;</code> into the
+	appropriate cell.
+      </li>
+      <li>Your code can maintain the current rotation of the
+	digits string in a state variable.</li>
+      <li>Start an interval timer.</li>
+      <li>For every tick of the timer, rotate the digits string
+	maintained in the state variable, and paint each character of
+	the rotated digits string into the appropriate cell in the
+	HTML.</li>
+      <li>
+	  Rotate the digits string right by using
+	  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/slice">String.slice()</a>.
+      </li>
+    </ul>
+    
+    
+  </body>
+</html>
