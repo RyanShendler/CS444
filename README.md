@@ -1,2 +1,1 @@
-# i444
-Submission directory for CS444 projects
+Project code for CS444: Programming for the Web
